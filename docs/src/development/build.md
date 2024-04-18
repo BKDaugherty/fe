@@ -17,9 +17,20 @@ The Fe compiler depends on the Solidity compiler for transforming Yul IR to EVM 
 - boost(1.65+)
 - libclang
 
+
+### Installing Boost
+
+You'll need at least Boost 1.65+ to compile solc-rust. Most package managers should have this version, so you can likely do something like the following.
+
 ```bash
-    brew install boost
+# Macos
+brew install boost
+
+# Ubuntu
+sudo apt install libboost-all-dev
 ```
+
+If your package manager has an outdated version, you could instead download a distribution from SourceForge and install it manually. See the boost documentation [here for more](https://www.boost.org/doc/libs/1_85_0/more/getting_started/unix-variants.html).
 
 Once these have been installed, you may run the full build. This is enabled using the *solc-backend* feature.
 
