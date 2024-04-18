@@ -36,3 +36,14 @@ Once these have been installed, you may run the full build. This is enabled usin
 
 - build the CLI: `cargo build --features solc-backend`
 - test: `cargo test --workspace --features solc-backend`
+
+## Running the CLI
+
+Once you have everything built, you'll likely want to give `fe` a spin! From the workspace root, you can install `fe` like so, and try running `fe --help` to make sure everything worked.
+
+```bash
+cargo install --path crates/fe --locked
+fe --help
+```
+
+
