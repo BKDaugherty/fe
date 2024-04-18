@@ -75,6 +75,8 @@ pub trait AnalyzerDb: SourceDb + Upcast<dyn SourceDb> + UpcastMut<dyn SourceDb> 
     fn ingot_modules(&self, ingot: IngotId) -> Rc<[ModuleId]>;
     #[salsa::invoke(queries::ingots::ingot_root_module)]
     fn ingot_root_module(&self, ingot: IngotId) -> Option<ModuleId>;
+    #[salsa::invoke(queries::ingots::ingot_impl_map)]
+    fn ingot_impl_map(&self, ingot: IngotId) -> Analysis<Rc<IndexMap<(TraitId, TypeId), ImplId>>>;
 
     // Module
     #[salsa::invoke(queries::module::module_file_path)]

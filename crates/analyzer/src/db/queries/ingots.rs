@@ -1,9 +1,16 @@
 use crate::{
-    namespace::items::{IngotId, IngotMode, ModuleId, ModuleSource},
+    context::{Analysis, AnalyzerContext},
+    display::Displayable,
+    namespace::items::{ImplId, IngotId, IngotMode, ModuleId, ModuleSource, TraitId},
+    namespace::scopes::ItemScope,
+    namespace::types::TypeId,
     AnalyzerDb,
 };
 use fe_common::files::{SourceFileId, Utf8Path, Utf8PathBuf};
-use indexmap::IndexSet;
+use indexmap::{
+    map::{Entry, IndexMap},
+    IndexSet,
+};
 use std::rc::Rc;
 
 pub fn ingot_modules(db: &dyn AnalyzerDb, ingot: IngotId) -> Rc<[ModuleId]> {
@@ -82,4 +89,56 @@ pub fn ingot_root_module(db: &dyn AnalyzerDb, ingot: IngotId) -> Option<ModuleId
         .iter()
         .find(|modid| modid.file_path_relative_to_src_dir(db) == filename)
         .copied()
+}
+
+// TODO: This implementation duplicates a fair bit of code from
+// `module_impl_map`. It'd be great to not do so. If we still need
+// module_impl_map, let's ensure that we refactor this to just use
+// module_impl_map, or some shared helper.
+
+// TODO: I'm actually not convinced this is sufficient, but it's
+// better than existing? Without orphan rules, I think we also need to
+// check external ingots. Think more about this.
+/// Analyze every impl in the ingot. Ensure there are no duplicates.
+pub fn ingot_impl_map(
+    db: &dyn AnalyzerDb,
+    ingot: IngotId,
+) -> Analysis<Rc<IndexMap<(TraitId, TypeId), ImplId>>> {
+    let mut map = IndexMap::<(TraitId, TypeId), ImplId>::new();
+    let mut all_diagnostics = Vec::new();
+    let ingot_all_modules = db.ingot_modules(ingot);
+    for module_id in ingot_all_modules.iter() {
+        let scope = ItemScope::new(db, *module_id);
+        let module_all_impls = db.module_all_impls(*module_id);
+        for impl_ in module_all_impls.value.iter() {
+            let key = &(impl_.trait_id(db), impl_.receiver(db));
+            match map.entry(*key) {
+                Entry::Occupied(entry) => {
+                    scope.duplicate_name_error(
+                        &format!(
+                            "duplicate `impl` blocks for trait `{}` for type `{}`",
+                            key.0.name(db),
+                            key.1.display(db)
+                        ),
+                        "",
+                        entry.get().ast(db).span,
+                        impl_.ast(db).span,
+                    );
+                }
+                Entry::Vacant(entry) => {
+                    entry.insert(*impl_);
+                }
+            }
+        }
+
+        all_diagnostics.extend_from_slice(
+            &[
+                module_all_impls.diagnostics,
+                scope.diagnostics.take().into(),
+            ]
+            .concat(),
+        );
+    }
+
+    Analysis::new(Rc::new(map), (*all_diagnostics.as_slice()).into())
 }

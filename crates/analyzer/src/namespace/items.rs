@@ -442,6 +442,9 @@ impl IngotId {
         for module in self.all_modules(db).iter() {
             module.sink_diagnostics(db, sink)
         }
+
+        // Check duplicate impl errors across the entire ingot.
+        sink.push_all(db.ingot_impl_map(*self).diagnostics.iter());
     }
 
     pub fn sink_external_ingot_diagnostics(
@@ -772,9 +775,6 @@ impl ModuleId {
 
         // duplicate item name errors
         sink.push_all(db.module_item_map(*self).diagnostics.iter());
-
-        // duplicate impl errors
-        sink.push_all(db.module_impl_map(*self).diagnostics.iter());
 
         // errors for each item
         self.all_items(db)
