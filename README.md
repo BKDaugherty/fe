@@ -46,10 +46,23 @@ Fe had its first alpha release January 2021 and is now following a monthly relea
 - [Build the compiler](https://github.com/ethereum/fe/blob/master/docs/src/development/build.md)
 - [Or download the binary release](https://github.com/ethereum/fe/releases)
 
-To compile Fe code:
+To compile Fe code, 
 
-1. Run `fe path/to/fe_source.fe`
-2. Fe creates a directory `output` in the current working directory that contains the compiled binary and abi.
+1. Create an Fe Project using `fe new my_first_fe_project`. This will create a directory structure that looks something like this.
+
+```
+my_first_fe_project
+└── src
+    ├── logic.fe
+    └── main.fe
+
+1 directory, 2 files
+```
+2. From the root of your new project, run `fe build .`
+
+*Alternatively, if you have some fe code alread you'd like to build, you can run*: `fe build path/to/fe_source.fe`
+
+3. Fe creates a directory `output` in the current working directory that contains the compiled binary and abi.
 
 Run `fe --help` to explore further options.
 
